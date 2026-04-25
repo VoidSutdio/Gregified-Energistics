@@ -1,18 +1,19 @@
 package com.walhay.gregifiedenergistics.common.mui;
 
 import com.cleanroommc.modularui.api.IPanelHandler;
-import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.drawable.ItemDrawable;
-import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.utils.Alignment;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.layout.Grid;
 import com.walhay.gregifiedenergistics.api.patterns.ISubstitutionStorage;
 import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.util.GTLog;
 import java.io.IOException;
 import java.util.List;
 import net.minecraft.item.ItemStack;
@@ -24,18 +25,22 @@ public class SubstitutionSlotWidget extends Widget<SubstitutionSlotWidget> imple
 	private List<ItemStack> items;
 	private SubstituionSyncHandler syncHandler;
 	private String name;
+	private IPanelHandler selectorPanel;
+	private ItemDrawable itemPreview;
 
 	public SubstitutionSlotWidget() {
 		size(18);
 		background(GTGuiTextures.SLOT);
-		var selected = new ItemDrawable();
-		overlay(selected);
-		onUpdateListener(w -> selected.setItem(items.get(syncHandler.getOption())));
+		this.itemPreview = new ItemDrawable();
+		overlay(itemPreview.asIcon().alignment(Alignment.CENTER));
+		onUpdateListener(w -> itemPreview.setItem(items.get(syncHandler.getOption())));
 	}
 
 	public SubstitutionSlotWidget storage(ISubstitutionStorage storage, String name) {
 		this.name = name;
+		GTLog.logger.info(String.format("Name: %s", name));
 		this.items = OreDictUnifier.getAllWithOreDictionaryName(name);
+		GTLog.logger.info(String.format("Items: %s\n", items));
 		this.syncHandler = new SubstituionSyncHandler(storage, name);
 		setSyncOrValue(syncHandler);
 
@@ -53,37 +58,48 @@ public class SubstitutionSlotWidget extends Widget<SubstitutionSlotWidget> imple
 	}
 
 	private IPanelHandler selectorPanel() {
-		return IPanelHandler.simple(getPanel(), (parentPanel, player) -> buildUI(), true);
-	}
+		if (selectorPanel == null) {
+			selectorPanel = IPanelHandler.simple(
+					getPanel(),
+					(parentPanel, player) -> {
+						int height = (int) Math.ceil(items.size() / 5.0f);
 
-	private ModularPanel buildUI() {
-		int sq = (int) Math.sqrt(items.size());
-
-		var panel = ModularPanel.defaultPanel("selector_panel_" + name, 18 * sq + 12, 18 * sq + 12);
-
-		var grid = new Grid()
-				.pos(6, 6)
-				.height(sq * 18)
-				.minElementMargin(0)
-				.minColWidth(18)
-				.minRowHeight(18)
-				.mapTo(sq, items.size(), index -> {
-					var widget = new ButtonWidget<>()
-							.background(IDrawable.of(GTGuiTextures.SLOT, new ItemDrawable(items.get(index))))
-							.onMousePressed(button -> this.syncHandler.setSubstitution(index));
-					return widget;
-				});
-
-		panel.child(IKey.lang(name).asWidget());
-		panel.child(grid);
-
-		return panel;
+						return GTGuis.createPopupPanel("selector_panel_" + name, 104, height * 18 + 50)
+								.child(IKey.lang("gregifiedenergistics.gui.substitution")
+										.asWidget()
+										.pos(5, 5))
+								.child(new Widget<>()
+										.size(18)
+										.top(19)
+										.horizontalCenter()
+										.background(GTGuiTextures.SLOT)
+										.overlay(itemPreview.asIcon().margin(1)))
+								.child(new Grid()
+										.horizontalCenter()
+										.top(41)
+										.minElementMargin(0)
+										.minColWidth(18)
+										.minRowHeight(18)
+										.mapTo(
+												Math.min(5, items.size()),
+												items,
+												(index, element) -> (Widget<?>) new ButtonWidget<>()
+														.background(GTGuiTextures.SLOT)
+														.overlay(new ItemDrawable(element)
+																.asIcon()
+																.margin(1))
+														.onMousePressed(
+																button -> this.syncHandler.setSubstitution(index))));
+					},
+					true);
+		}
+		return selectorPanel;
 	}
 
 	@Override
 	public @NotNull Result onMousePressed(int mouseButton) {
 		selectorPanel().togglePanel();
-		return Interactable.super.onMousePressed(mouseButton);
+		return Result.SUCCESS;
 	}
 
 	public class SubstituionSyncHandler extends SyncHandler {

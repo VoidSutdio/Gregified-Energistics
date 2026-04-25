@@ -46,6 +46,7 @@ import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.Collection;
@@ -143,7 +144,7 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 		var blockingMode = sync.syncValue(
 				"blocking_mode", new EnumSyncValue<>(BlockingMode.class, this::getBlockingMode, this::setBlockingMode));
 
-		ModularPanel panel = ModularPanel.defaultPanel("gregifiedenergistics.gui.me_assembly_line_bus");
+		ModularPanel panel = GTGuis.createPanel(this, 176, 160);
 
 		panel.child(new ToggleButton()
 						.syncHandler("working_enabled")
@@ -167,7 +168,7 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 						.stateOverlay(0, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[0])
 						.stateOverlay(1, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[1])
 						.stateOverlay(2, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[2]))
-				.child(new ItemSlot().slot(importItems, 0).pos(6, 6).size(18));
+				.child(new ItemSlot().slot(importItems, 0).pos(7, 7).size(18));
 
 		populateUI(panel, sync);
 
