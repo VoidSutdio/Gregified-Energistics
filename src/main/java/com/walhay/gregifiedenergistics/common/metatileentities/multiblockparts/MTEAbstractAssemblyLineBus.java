@@ -27,6 +27,7 @@ import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.walhay.gregifiedenergistics.api.metatileentity.MetaTileEntityCraftingProvider;
 import com.walhay.gregifiedenergistics.api.mui.GregifiedEnergisticsGuiTextures;
 import com.walhay.gregifiedenergistics.api.patterns.AbstractPatternHelper;
@@ -130,7 +131,7 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 		tooltip.add(I18n.format("gregifiedenergistics.tool_action.memory_card.copy_substitution"));
 	}
 
-	protected void populateUI(ModularPanel panel) {}
+	protected void populateUI(ModularPanel panel, PanelSyncManager sync) {}
 
 	@Override
 	public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager sync, UISettings settings) {
@@ -142,8 +143,7 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 		var blockingMode = sync.syncValue(
 				"blocking_mode", new EnumSyncValue<>(BlockingMode.class, this::getBlockingMode, this::setBlockingMode));
 
-		ModularPanel panel = ModularPanel.defaultPanel("gregifiedenergistics.gui.me_assembly_line_bus")
-				.bindPlayerInventory();
+		ModularPanel panel = ModularPanel.defaultPanel("gregifiedenergistics.gui.me_assembly_line_bus");
 
 		panel.child(new ToggleButton()
 						.syncHandler("working_enabled")
@@ -166,9 +166,10 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 						.top(36)
 						.stateOverlay(0, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[0])
 						.stateOverlay(1, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[1])
-						.stateOverlay(2, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[2]));
+						.stateOverlay(2, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[2]))
+				.child(new ItemSlot().slot(importItems, 0).pos(6, 6).size(18));
 
-		populateUI(panel);
+		populateUI(panel, sync);
 
 		return panel;
 	}

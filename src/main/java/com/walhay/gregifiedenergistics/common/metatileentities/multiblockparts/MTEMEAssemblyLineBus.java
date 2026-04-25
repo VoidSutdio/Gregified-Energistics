@@ -4,6 +4,11 @@ import static gregtech.api.GTValues.LuV;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.items.misc.ItemEncodedPattern;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.SyncHandlers;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.walhay.gregifiedenergistics.GregifiedEnergisticsConfig;
 import com.walhay.gregifiedenergistics.api.capability.AbstractPatternItemHandler;
 import com.walhay.gregifiedenergistics.api.patterns.implementations.DataStickPatternHelper;
@@ -44,6 +49,22 @@ public class MTEMEAssemblyLineBus extends MTEAbstractAssemblyLineBus {
 	@Override
 	public MetaTileEntity createMetaTileEntity(IGregTechTileEntity metaTileEntity) {
 		return new MTEMEAssemblyLineBus(metaTileEntityId);
+	}
+
+	@Override
+	protected void populateUI(ModularPanel panel, PanelSyncManager sync) {
+		SlotGroupWidget slotGroupWidget = SlotGroupWidget.builder()
+				.row("IIII")
+				.row("IIII")
+				.row("IIII")
+				.row("IIII")
+				.key('I', index -> new ItemSlot().slot(SyncHandlers.itemSlot(patternHandler, index)))
+				.build()
+				.horizontalCenter()
+				.top(6);
+
+		panel.child(slotGroupWidget);
+		panel.child(SlotGroupWidget.playerInventory(true));
 	}
 
 	@Override
