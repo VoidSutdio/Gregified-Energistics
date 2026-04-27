@@ -18,6 +18,8 @@ import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.drawable.GuiTextures;
 import com.cleanroommc.modularui.drawable.ItemDrawable;
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
@@ -25,9 +27,16 @@ import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
+import com.cleanroommc.modularui.widgets.ListWidget;
+import com.cleanroommc.modularui.widgets.PageButton;
+import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
+import com.cleanroommc.modularui.widgets.layout.Flow;
+import com.cleanroommc.modularui.widgets.layout.Grid;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.google.common.collect.Lists;
 import com.walhay.gregifiedenergistics.api.metatileentity.MetaTileEntityCraftingProvider;
 import com.walhay.gregifiedenergistics.api.mui.GregifiedEnergisticsGuiTextures;
 import com.walhay.gregifiedenergistics.api.patterns.AbstractPatternHelper;
@@ -36,6 +45,7 @@ import com.walhay.gregifiedenergistics.api.patterns.ISubstitutionStorage;
 import com.walhay.gregifiedenergistics.api.patterns.substitutions.SubstitutionStorage;
 import com.walhay.gregifiedenergistics.api.util.BlockingMode;
 import com.walhay.gregifiedenergistics.client.render.GregifiedEnergisticsTextures;
+import com.walhay.gregifiedenergistics.common.mui.SubstitutionSlotWidget;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.impl.GhostCircuitItemStackHandler;
@@ -66,6 +76,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -132,8 +143,6 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 		tooltip.add(I18n.format("gregifiedenergistics.tool_action.memory_card.copy_substitution"));
 	}
 
-	protected void populateUI(ModularPanel panel, PanelSyncManager sync) {}
-
 	@Override
 	public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager sync, UISettings settings) {
 		var working = sync.syncValue(
@@ -144,35 +153,91 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 		var blockingMode = sync.syncValue(
 				"blocking_mode", new EnumSyncValue<>(BlockingMode.class, this::getBlockingMode, this::setBlockingMode));
 
-		ModularPanel panel = GTGuis.createPanel(this, 176, 160);
+		ModularPanel panel = GTGuis.createPanel(this, 176, 200);
 
-		panel.child(new ToggleButton()
-						.syncHandler("working_enabled")
-						.size(16)
+		var controller = new PagedWidget.Controller();
+
+		panel.child(Flow.row()
+				.name("tab row")
+				.widthRel(1f)
+				.leftRel(0.5f)
+				.margin(3, 0)
+				.coverChildrenHeight()
+				.topRel(0f, 3, 1f)
+				.child(new PageButton(0, controller)
+						.tab(GuiTextures.TAB_TOP, 0)
+						.addTooltipLine(IKey.lang("gregtech.machine.workbench.tab.workbench"))
+						.overlay(new ItemDrawable(AEApi.instance()
+										.definitions()
+										.items()
+										.encodedPattern()
+										.maybeItem()
+										.get())
+								.asIcon()
+								.size(16)))
+				.child(new PageButton(1, controller)
+						.tab(GuiTextures.TAB_TOP, 0)
+						.addTooltipLine(IKey.lang("gregtech.machine.workbench.tab.item_list"))
+						.addTooltipLine(IKey.lang("gregtech.machine.workbench.storage_note")
+								.style(TextFormatting.DARK_GRAY))
+						.overlay(new ItemDrawable(AEApi.instance()
+										.definitions()
+										.items()
+										.memoryCard()
+										.maybeItem()
+										.get())
+								.asIcon()
+								.size(16))));
+		panel.child(new ItemSlot().slot(importItems, 0).pos(7, 7).size(18))
+				.child(Flow.column()
+						.width(16)
 						.left(-18)
 						.top(0)
-						.overlay(false, GTGuiTextures.BUTTON_POWER[0])
-						.overlay(true, GTGuiTextures.BUTTON_POWER[1]))
-				.child(new ToggleButton()
-						.syncHandler("fluid_mode")
-						.size(16)
-						.left(-18)
-						.top(18)
-						.overlay(false, new ItemDrawable(Items.BUCKET))
-						.overlay(true, new ItemDrawable(Items.WATER_BUCKET)))
-				.child(new CycleButtonWidget()
-						.syncHandler("blocking_mode")
-						.size(16)
-						.left(-18)
-						.top(36)
-						.stateOverlay(0, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[0])
-						.stateOverlay(1, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[1])
-						.stateOverlay(2, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[2]))
-				.child(new ItemSlot().slot(importItems, 0).pos(7, 7).size(18));
-
-		populateUI(panel, sync);
+						.child(new ToggleButton()
+								.syncHandler("working_enabled")
+								.size(16)
+								.overlay(false, GTGuiTextures.BUTTON_POWER[0])
+								.overlay(true, GTGuiTextures.BUTTON_POWER[1]))
+						.child(new ToggleButton()
+								.syncHandler("fluid_mode")
+								.size(16)
+								.overlay(false, new ItemDrawable(Items.BUCKET))
+								.overlay(true, new ItemDrawable(Items.WATER_BUCKET)))
+						.child(new CycleButtonWidget()
+								.syncHandler("blocking_mode")
+								.size(16)
+								.stateOverlay(0, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[0])
+								.stateOverlay(1, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[1])
+								.stateOverlay(2, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[2])))
+				.child(new PagedWidget<>()
+						.top(22)
+						.widthRel(0.9f)
+						.controller(controller)
+						.coverChildrenHeight()
+						.addPage(createPatternList(panel, sync))
+						.addPage(createSubstitutionList(panel, sync)));
 
 		return panel;
+	}
+
+	public Widget<?> createPatternList(ModularPanel panel, PanelSyncManager syncHandler) {
+		return null;
+	}
+
+	public Widget<?> createSubstitutionList(ModularPanel panel, PanelSyncManager syncHandler) {
+		return Flow.column()
+				.left(7)
+				.widthRel(0.9f)
+				.child(IKey.lang("gregifiedenergistics.gui.substitution_list").asWidget())
+				.child(new ListWidget<>()
+						.widthRel(0.9f)
+						.child(new Grid()
+								.minElementMargin(0)
+								.minColWidth(18)
+								.minRowHeight(18)
+								.full()
+								.mapTo(9, Lists.newArrayList(substitutionStorage.getOptions()), (index, name) ->
+										(Widget<?>) new SubstitutionSlotWidget().storage(substitutionStorage, name))));
 	}
 
 	@Override

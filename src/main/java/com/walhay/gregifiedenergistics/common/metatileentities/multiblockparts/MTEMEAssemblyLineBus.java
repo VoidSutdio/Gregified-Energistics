@@ -4,10 +4,13 @@ import static gregtech.api.GTValues.LuV;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.items.misc.ItemEncodedPattern;
+import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.value.sync.SyncHandlers;
+import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
+import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.walhay.gregifiedenergistics.GregifiedEnergisticsConfig;
 import com.walhay.gregifiedenergistics.api.capability.AbstractPatternItemHandler;
@@ -52,19 +55,21 @@ public class MTEMEAssemblyLineBus extends MTEAbstractAssemblyLineBus {
 	}
 
 	@Override
-	protected void populateUI(ModularPanel panel, PanelSyncManager sync) {
-		SlotGroupWidget slotGroupWidget = SlotGroupWidget.builder()
-				.row("IIII")
-				.row("IIII")
-				.row("IIII")
-				.row("IIII")
-				.key('I', index -> new ItemSlot().slot(SyncHandlers.itemSlot(patternHandler, index)))
-				.build()
-				.horizontalCenter()
-				.top(6);
-
-		panel.child(slotGroupWidget);
-		panel.child(SlotGroupWidget.playerInventory(true));
+	public Widget<?> createPatternList(ModularPanel panel, PanelSyncManager syncHandler) {
+		return Flow.column()
+				.name("pattern list")
+				.coverChildren()
+				.child(IKey.lang("gregifiedenergistics.gui.pattern_list").asWidget())
+				.child(SlotGroupWidget.builder()
+						.row("IIII")
+						.row("IIII")
+						.row("IIII")
+						.row("IIII")
+						.key('I', index -> new ItemSlot().slot(SyncHandlers.itemSlot(patternHandler, index)))
+						.build()
+						.horizontalCenter()
+						.coverChildren())
+				.child(SlotGroupWidget.playerInventory(true));
 	}
 
 	@Override

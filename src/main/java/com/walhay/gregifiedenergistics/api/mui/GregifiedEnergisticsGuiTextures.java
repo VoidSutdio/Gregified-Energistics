@@ -13,12 +13,6 @@ public class GregifiedEnergisticsGuiTextures {
 	 */
 	public static final UITexture[] BLOCKING_MODE = slice("textures/gui/blocking_mode.png", 16, 48, 16, 16);
 
-	/*
-	 * 1 = NO FLUID
-	 * 2 = FLUID
-	 */
-	public static final UITexture[] FLUID_MODE = slice("textures/gui/fluid_mode.png", 16, 32, 16, 16);
-
 	@SuppressWarnings("SameParameterValue")
 	private static UITexture[] slice(String path, int imageWidth, int imageHeight, int sliceWidth, int sliceHeight) {
 		return slice(path, imageWidth, imageHeight, sliceWidth, sliceHeight, null);

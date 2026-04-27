@@ -27,3 +27,5 @@ gregifiedenergistics.machine.me.import_copy_settings=Настройки сохр
 gregifiedenergistics.machine.me.import_paste_settings=Настройки из Карты данных применены
 
 gregifiedenergistics.gui.substitution=Замены
+gregifiedenergistics.gui.substitution_list=Список Замен
+gregifiedenergistics.gui.pattern_list=Шаблоны
