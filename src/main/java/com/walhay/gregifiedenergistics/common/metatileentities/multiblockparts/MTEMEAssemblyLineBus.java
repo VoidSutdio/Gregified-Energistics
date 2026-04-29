@@ -11,10 +11,10 @@ import com.cleanroommc.modularui.value.sync.SyncHandlers;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
-import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.walhay.gregifiedenergistics.GregifiedEnergisticsConfig;
 import com.walhay.gregifiedenergistics.api.capability.AbstractPatternItemHandler;
 import com.walhay.gregifiedenergistics.api.patterns.implementations.DataStickPatternHelper;
+import com.walhay.gregifiedenergistics.common.mui.DataStickSlot;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.util.AssemblyLineManager;
@@ -65,7 +65,7 @@ public class MTEMEAssemblyLineBus extends MTEAbstractAssemblyLineBus {
 						.row("IIII")
 						.row("IIII")
 						.row("IIII")
-						.key('I', index -> new ItemSlot().slot(SyncHandlers.itemSlot(patternHandler, index)))
+						.key('I', index -> new DataStickSlot().slot(SyncHandlers.itemSlot(patternHandler, index)))
 						.build()
 						.horizontalCenter()
 						.coverChildren())
