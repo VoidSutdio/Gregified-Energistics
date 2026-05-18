@@ -56,9 +56,13 @@ public class MTEMEAssemblyLineBus extends MTEAbstractAssemblyLineBus {
 
 	@Override
 	public Widget<?> createPatternList(ModularPanel panel, PanelSyncManager syncHandler) {
+		panel.bindPlayerInventory();
+
 		return Flow.column()
 				.name("pattern list")
-				.coverChildren()
+				.left(7)
+				.widthRel(0.9f)
+				.coverChildrenHeight()
 				.child(IKey.lang("gregifiedenergistics.gui.pattern_list").asWidget())
 				.child(SlotGroupWidget.builder()
 						.row("IIII")
@@ -67,9 +71,7 @@ public class MTEMEAssemblyLineBus extends MTEAbstractAssemblyLineBus {
 						.row("IIII")
 						.key('I', index -> new DataStickSlot().slot(SyncHandlers.itemSlot(patternHandler, index)))
 						.build()
-						.horizontalCenter()
-						.coverChildren())
-				.child(SlotGroupWidget.playerInventory(true));
+						.coverChildren());
 	}
 
 	@Override

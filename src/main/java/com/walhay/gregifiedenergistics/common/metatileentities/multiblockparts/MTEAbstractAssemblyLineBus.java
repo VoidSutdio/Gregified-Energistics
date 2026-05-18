@@ -1,7 +1,9 @@
 package com.walhay.gregifiedenergistics.common.metatileentities.multiblockparts;
 
+import static com.walhay.gregifiedenergistics.api.mui.GregifiedEnergisticsGuiTextures.BLOCKING_MODE;
 import static com.walhay.gregifiedenergistics.api.patterns.substitutions.SubstitutionStorage.STORAGE_TAG;
 import static com.walhay.gregifiedenergistics.api.util.BlockingMode.BLOCKING_MODE_TAG;
+import static gregtech.api.mui.GTGuiTextures.BUTTON_POWER;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -38,7 +40,6 @@ import com.cleanroommc.modularui.widgets.layout.Grid;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.google.common.collect.Lists;
 import com.walhay.gregifiedenergistics.api.metatileentity.MetaTileEntityCraftingProvider;
-import com.walhay.gregifiedenergistics.api.mui.GregifiedEnergisticsGuiTextures;
 import com.walhay.gregifiedenergistics.api.patterns.AbstractPatternHelper;
 import com.walhay.gregifiedenergistics.api.patterns.ISubstitutionNotifiable;
 import com.walhay.gregifiedenergistics.api.patterns.ISubstitutionStorage;
@@ -55,7 +56,6 @@ import gregtech.api.metatileentity.multiblock.AbilityInstances;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
-import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -145,59 +145,78 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 
 	@Override
 	public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager sync, UISettings settings) {
-		var working = sync.syncValue(
-				"working_enabled", new BooleanSyncValue(this::isWorkingEnabled, this::setWorkingEnabled));
-
-		var useFluids = sync.syncValue("fluid_mode", new BooleanSyncValue(this::getUsingFluids, this::setUsingFluids));
-
-		var blockingMode = sync.syncValue(
+		sync.syncValue("working_enabled", new BooleanSyncValue(this::isWorkingEnabled, this::setWorkingEnabled));
+		sync.syncValue("fluid_mode", new BooleanSyncValue(this::getUsingFluids, this::setUsingFluids));
+		sync.syncValue(
 				"blocking_mode", new EnumSyncValue<>(BlockingMode.class, this::getBlockingMode, this::setBlockingMode));
 
 		ModularPanel panel = GTGuis.createPanel(this, 176, 200);
 
 		var controller = new PagedWidget.Controller();
 
-		panel.child(Flow.row()
+		var tabs = Flow.row()
 				.name("tab row")
 				.widthRel(1f)
 				.leftRel(0.5f)
 				.margin(3, 0)
 				.coverChildrenHeight()
-				.topRel(0f, 3, 1f)
-				.child(new PageButton(0, controller)
-						.tab(GuiTextures.TAB_TOP, 0)
-						.addTooltipLine(IKey.lang("gregtech.machine.workbench.tab.workbench"))
-						.overlay(new ItemDrawable(AEApi.instance()
-										.definitions()
-										.items()
-										.encodedPattern()
-										.maybeItem()
-										.get())
-								.asIcon()
-								.size(16)))
-				.child(new PageButton(1, controller)
-						.tab(GuiTextures.TAB_TOP, 0)
-						.addTooltipLine(IKey.lang("gregtech.machine.workbench.tab.item_list"))
-						.addTooltipLine(IKey.lang("gregtech.machine.workbench.storage_note")
-								.style(TextFormatting.DARK_GRAY))
-						.overlay(new ItemDrawable(AEApi.instance()
-										.definitions()
-										.items()
-										.memoryCard()
-										.maybeItem()
-										.get())
-								.asIcon()
-								.size(16))));
-		panel.child(new ItemSlot().slot(importItems, 0).pos(7, 7).size(18))
+				.topRel(0f, 3, 1f);
+
+		var paged = new PagedWidget<>();
+
+		int pageCounter = 0;
+
+		var patternList = createPatternList(panel, sync);
+		if (patternList != null) {
+			tabs.child(new PageButton(pageCounter++, controller)
+					.tab(GuiTextures.TAB_TOP, 0)
+					.addTooltipLine(IKey.lang("gregtech.machine.workbench.tab.workbench"))
+					.overlay(new ItemDrawable(AEApi.instance()
+									.definitions()
+									.items()
+									.encodedPattern()
+									.maybeItem()
+									.get())
+							.asIcon()
+							.size(16)));
+		}
+
+		var substitutionList = createSubstitutionList(panel, sync);
+		if (substitutionList != null) {
+			tabs.child(new PageButton(pageCounter++, controller)
+					.tab(GuiTextures.TAB_TOP, 0)
+					.addTooltipLine(IKey.lang("gregtech.machine.workbench.tab.item_list"))
+					.addTooltipLine(
+							IKey.lang("gregtech.machine.workbench.storage_note").style(TextFormatting.DARK_GRAY))
+					.overlay(new ItemDrawable(AEApi.instance()
+									.definitions()
+									.items()
+									.memoryCard()
+									.maybeItem()
+									.get())
+							.asIcon()
+							.size(16)));
+		}
+
+		if (patternList != null) {
+			paged.addPage(patternList);
+		}
+
+		if (substitutionList != null) {
+			paged.addPage(substitutionList);
+		}
+
+		return panel.child(new ItemSlot().slot(importItems, 0).pos(7, 7).size(18))
 				.child(Flow.column()
 						.width(16)
 						.left(-18)
 						.top(0)
+						.childPadding(2)
 						.child(new ToggleButton()
 								.syncHandler("working_enabled")
 								.size(16)
-								.overlay(false, GTGuiTextures.BUTTON_POWER[0])
-								.overlay(true, GTGuiTextures.BUTTON_POWER[1]))
+								.overlay(false, BUTTON_POWER[0])
+								.overlay(true, BUTTON_POWER[1]))
 						.child(new ToggleButton()
 								.syncHandler("fluid_mode")
 								.size(16)
@@ -206,18 +225,11 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 						.child(new CycleButtonWidget()
 								.syncHandler("blocking_mode")
 								.size(16)
-								.stateOverlay(0, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[0])
-								.stateOverlay(1, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[1])
-								.stateOverlay(2, GregifiedEnergisticsGuiTextures.BLOCKING_MODE[2])))
-				.child(new PagedWidget<>()
-						.top(22)
-						.widthRel(0.9f)
-						.controller(controller)
-						.coverChildrenHeight()
-						.addPage(createPatternList(panel, sync))
-						.addPage(createSubstitutionList(panel, sync)));
-
-		return panel;
+								.stateOverlay(0, BLOCKING_MODE[0])
+								.stateOverlay(1, BLOCKING_MODE[1])
+								.stateOverlay(2, BLOCKING_MODE[2])))
+				.child(tabs)
+				.child(paged.top(28).widthRel(0.9f).controller(controller));
 	}
 
 	public Widget<?> createPatternList(ModularPanel panel, PanelSyncManager syncHandler) {
@@ -235,7 +247,7 @@ public abstract class MTEAbstractAssemblyLineBus extends MetaTileEntityCraftingP
 								.minElementMargin(0)
 								.minColWidth(18)
 								.minRowHeight(18)
-								.full()
+								.coverChildren()
 								.mapTo(9, Lists.newArrayList(substitutionStorage.getOptions()), (index, name) ->
 										(Widget<?>) new SubstitutionSlotWidget().storage(substitutionStorage, name))));
 	}
