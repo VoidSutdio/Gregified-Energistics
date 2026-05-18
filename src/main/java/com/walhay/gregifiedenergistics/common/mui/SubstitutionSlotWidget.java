@@ -46,6 +46,12 @@ public class SubstitutionSlotWidget extends Widget<SubstitutionSlotWidget> imple
 	}
 
 	@Override
+	public void onInit() {
+		tooltip().setAutoUpdate(true);
+		tooltip().tooltipBuilder(rt -> rt.addFromItem(items.get(syncHandler.getOption())));
+	}
+
+	@Override
 	public boolean isValidSyncOrValue(@NotNull ISyncOrValue syncOrValue) {
 		return syncHandler instanceof SubstituionSyncHandler;
 	}
@@ -62,6 +68,7 @@ public class SubstitutionSlotWidget extends Widget<SubstitutionSlotWidget> imple
 					(parentPanel, player) -> {
 						int height = (int) Math.ceil(items.size() / 5.0f);
 
+						var selectedItem = items.get(syncHandler.getOption());
 						return GTGuis.createPopupPanel("selector_panel_" + name, 104, height * 18 + 50)
 								.child(IKey.lang("gregifiedenergistics.gui.substitution")
 										.asWidget()
@@ -69,6 +76,7 @@ public class SubstitutionSlotWidget extends Widget<SubstitutionSlotWidget> imple
 								.child(new Widget<>()
 										.size(18)
 										.top(19)
+										.tooltip(rt -> rt.addFromItem(selectedItem))
 										.horizontalCenter()
 										.background(GTGuiTextures.SLOT)
 										.overlay(itemPreview.asIcon().margin(1)))
@@ -86,6 +94,7 @@ public class SubstitutionSlotWidget extends Widget<SubstitutionSlotWidget> imple
 														.overlay(new ItemDrawable(element)
 																.asIcon()
 																.margin(1))
+														.tooltip(rt -> rt.addFromItem(element))
 														.onMousePressed(
 																button -> this.syncHandler.setSubstitution(index))));
 					},
